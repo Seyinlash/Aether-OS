@@ -1,4 +1,3 @@
-
 (function(){
 "use strict";
 
@@ -121,6 +120,7 @@ const GLYPHS = {
   pin: '<path d="M12 17v5"/><path d="M9 3h6l1 5-2 2v3H8v-3L6 8Z"/>',
   arrange: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'
 };
+Aether.icon = svg;
 function svg(name, extra){
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" '+(extra||'')+'>'+(GLYPHS[name]||'')+'</svg>';
 }
@@ -131,22 +131,14 @@ function svg(name, extra){
    ---------------------------------------------------------------------- */
 Aether.Icons = (function(){
   const layer = document.getElementById("icons-layer");
-  const APPS = [
-    { id:"files",    label:"File Manager",   glyph:"folder" },
-    { id:"terminal", label:"Terminal",       glyph:"terminal" },
-    { id:"notes",    label:"Notes",          glyph:"note" },
-    { id:"photos",   label:"Photos",         glyph:"photo" },
-    { id:"browser",  label:"Browser",        glyph:"compass" },
-    { id:"settings", label:"Settings",       glyph:"settings" },
-    { id:"monitor",  label:"System Monitor", glyph:"gauge" }
-  ];
+  const apps = () => Aether.Apps.list().map(app => ({ ...app, label: app.name, glyph: app.icon }));
 
   const GRID_X = 96, GRID_Y = 104, PAD = 22;
   let selected = null;
 
   function defaultPositions(){
     const pos = {};
-    APPS.forEach((app, i) => {
+    apps().forEach((app, i) => {
       pos[app.id] = { col: 0, row: i };
     });
     return pos;
@@ -155,7 +147,7 @@ Aether.Icons = (function(){
   function render(){
     const saved = Aether.Store.get("iconPositions", defaultPositions());
     layer.innerHTML = "";
-    APPS.forEach(app => {
+    apps().forEach(app => {
       const p = saved[app.id] || { col:0, row:0 };
       const el = document.createElement("div");
       el.className = "icon";
@@ -178,7 +170,7 @@ Aether.Icons = (function(){
   }
 
   function openApp(id, label){
-    return Aether.WindowManager.openWindow(label || id);
+    return Aether.Apps.launch(id);
   }
 
   function makeDraggable(el, id, savedPositions){
@@ -223,7 +215,7 @@ Aether.Icons = (function(){
         // treat as click -> double-click detection
         const now = Date.now();
         if(el._lastClick && now - el._lastClick < 380){
-          const app = APPS.find(a => a.id === id);
+          const app = apps().find(a => a.id === id);
           openApp(id, app && app.label);
         }
         el._lastClick = now;
@@ -232,7 +224,7 @@ Aether.Icons = (function(){
 
     el.addEventListener("keydown", (e) => {
       if(e.key === "Enter"){
-        const app = APPS.find(a => a.id === id);
+        const app = apps().find(a => a.id === id);
         openApp(id, app && app.label);
       }
     });
@@ -252,10 +244,10 @@ Aether.Icons = (function(){
   }
 
   function clearSelection(){ select(null); }
-  function getApp(id){ return APPS.find(a => a.id === id); }
+  function getApp(id){ return apps().find(a => a.id === id); }
   function openSelected(id){ const a = getApp(id); openApp(id, a && a.label); }
 
-  return { render, autoArrange, clearSelection, getApp, openApp, openSelected, APPS };
+  return { render, autoArrange, clearSelection, getApp, openApp, openSelected, get APPS(){ return apps(); } };
 })();
 
 /* ----------------------------------------------------------------------
@@ -294,7 +286,7 @@ Aether.ContextMenu = (function(){
     close();
     desktopMenu.innerHTML = "";
     desktopMenu.appendChild(item("New Folder", "folder", () => {
-      Aether.Toast.show("New Folder - connects to the virtual filesystem in Phase 2");
+      Aether.Toast.show("New Folder - available when the file manager is built");
     }));
     desktopMenu.appendChild(item("Refresh", "refresh", () => {
       Aether.Icons.render();
@@ -316,8 +308,8 @@ Aether.ContextMenu = (function(){
     const app = Aether.Icons.getApp(appId);
     iconMenu.innerHTML = "";
     iconMenu.appendChild(item("Open", "open", () => Aether.Icons.openSelected(appId)));
-    iconMenu.appendChild(item("Pin to Taskbar", "pin", () => {
-      Aether.Toast.show("Pinning arrives with the taskbar app system in Phase 2");
+    iconMenu.appendChild(item(Aether.Apps.isPinned(appId) ? "Unpin from Start" : "Pin to Start", "pin", () => {
+      Aether.Apps.togglePin(appId);
     }));
     iconMenu.appendChild(sep());
     iconMenu.appendChild(item("Properties", "info", () => {
@@ -520,18 +512,6 @@ Aether.Tray = (function(){
 })();
 
 /* ----------------------------------------------------------------------
-   Start button - stub until the app launcher (Phase 2) exists
-   ---------------------------------------------------------------------- */
-(function(){
-  const btn = document.getElementById("start-btn");
-  btn.addEventListener("click", () => {
-    btn.classList.add("active");
-    Aether.Toast.show("Start menu arrives in Phase 2");
-    setTimeout(() => btn.classList.remove("active"), 220);
-  });
-})();
-
-/* ----------------------------------------------------------------------
    Boot
    ---------------------------------------------------------------------- */
 function init(){
@@ -558,4 +538,3 @@ function init(){
 
 document.addEventListener("DOMContentLoaded", init);
 })();
-

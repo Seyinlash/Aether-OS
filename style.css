@@ -1,5 +1,4 @@
-
-  /* ==========================================================================
+/* ==========================================================================
      AETHER OS - DESIGN TOKENS
      Palette: deep space-blue base, violet/blue glass accents.
      Type:    "Space Grotesk"   system chrome (taskbar, clock, headings)
@@ -385,3 +384,38 @@
 #tray,#start-btn { flex-shrink:0; }
 #tray-battery { width:auto; gap:3px; padding:0 8px; }
 @media(max-width:540px) { #start-btn { padding:0 8px; } #start-btn span,#tray-battery { display:none; } #clock-btn { padding:4px; } .window-task { max-width:120px; } }
+/* Phase 3: Start Menu and application placeholders */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+#start-menu { position:fixed; left:10px; bottom:calc(var(--taskbar-h) + 10px); z-index:50; width:min(440px,calc(100vw - 20px)); max-height:calc(100dvh - var(--taskbar-h) - 24px); display:flex; flex-direction:column; padding:18px; opacity:0; visibility:hidden; transform:translateY(10px) scale(.985); transform-origin:bottom left; transition:opacity 160ms ease,transform 160ms ease,visibility 160ms; background:linear-gradient(160deg,rgba(27,32,54,.97),rgba(13,17,30,.97)); }
+#start-menu.open { opacity:1; visibility:visible; transform:none; }
+.start-profile { display:flex; align-items:center; gap:11px; margin-bottom:16px; }
+.profile-mark { display:grid; place-items:center; width:38px; height:38px; border:1px solid #8b6bff55; border-radius:12px; background:var(--accent-grad-soft); }
+.start-profile strong { display:block; font-size:14px; font-weight:500; }
+.start-profile div>span { display:block; margin-top:3px; color:var(--text-low); font-size:12px; }
+.start-search input { width:100%; border:1px solid var(--glass-border); background:#06070d66; border-radius:10px; padding:11px 13px; color:var(--text-hi); font:inherit; font-size:14px; outline-offset:2px; }
+.start-search input:focus { outline:2px solid var(--accent-blue); }
+.start-scroll { overflow:auto; min-height:0; margin-top:6px; padding:2px; scrollbar-width:thin; }
+#start-menu h2 { font-size:12px; font-weight:500; color:var(--text-mid); margin:16px 6px 8px; }
+.start-app-row { display:flex; align-items:center; border-radius:9px; }
+.start-app-row:hover { background:var(--glass-fill); }
+.start-app { display:flex; align-items:center; gap:12px; flex:1; min-width:0; padding:10px; border:0; border-radius:9px; background:none; color:var(--text-hi); text-align:left; font-size:14px; cursor:pointer; }
+.start-app svg,.start-pin svg { width:20px; height:20px; flex-shrink:0; }
+.start-app svg { color:#b7a8ff; }
+.start-app span { overflow:hidden; text-overflow:ellipsis; }
+.start-pin { padding:8px; margin-right:4px; border:0; border-radius:8px; background:transparent; color:var(--text-low); cursor:pointer; }
+.start-pin[aria-pressed=true] { color:#c3b5ff; background:#8b6bff1c; }
+.pinned-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+.pinned-grid .start-app { flex-direction:column; gap:8px; font-size:12px; text-align:center; min-height:76px; }
+.start-empty { font-size:12px; color:var(--text-low); margin:8px 6px; }
+.pinned-grid .start-empty { grid-column:1/-1; }
+.start-system { display:flex; flex-shrink:0; gap:6px; padding-top:12px; margin-top:10px; border-top:1px solid var(--glass-border); }
+.start-system button,#power-screen button { flex:1; border:1px solid var(--glass-border); background:var(--glass-fill); color:var(--text-mid); border-radius:8px; padding:9px 6px; font-size:12px; cursor:pointer; }
+.start-system button:hover,#power-screen button:hover { background:var(--glass-fill-strong); color:var(--text-hi); }
+.app-placeholder { height:100%; min-height:140px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+.app-placeholder-icon svg { width:36px; height:36px; color:var(--accent-violet); }
+.app-placeholder h2 { font-size:18px; font-weight:500; margin:16px 0 8px; }
+.app-placeholder p { font-size:14px; color:var(--text-low); margin:0; }
+#power-screen { position:fixed; inset:0; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; background:radial-gradient(ellipse at center,#161b33,#06070d); }
+#power-screen h1 { font-size:24px; font-weight:500; }
+#power-screen p { color:var(--text-mid); font-size:14px; }
+#power-screen button { flex:none; margin-top:16px; padding:12px 24px; }
