@@ -7,47 +7,14 @@
    (window manager, app framework, virtual filesystem) can hook in cleanly
    without touching this file's internals.
    ========================================================================== */
-const Aether = window.Aether = {};
+const Aether = window.Aether;
 
 /* ----------------------------------------------------------------------
    Store - thin localStorage wrapper, namespaced. Structured data (files,
    notes, images) will move to IndexedDB in a later phase; this module is
    only for small settings/preferences, per the project's data plan.
    ---------------------------------------------------------------------- */
-Aether.Store = (function(){
-  const NS = "aether:";
-  function get(key, fallback){
-    try{
-      const raw = localStorage.getItem(NS + key);
-      return raw === null ? fallback : JSON.parse(raw);
-    }catch(e){ return fallback; }
-  }
-  function set(key, value){
-    try{ localStorage.setItem(NS + key, JSON.stringify(value)); }
-    catch(e){ /* storage unavailable or full - fail silently, OS still works */ }
-  }
-  function remove(key){ try{ localStorage.removeItem(NS + key); }catch(e){} }
-  function exportAll(){
-    const out = {};
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(k && k.indexOf(NS) === 0) out[k.slice(NS.length)] = get(k.slice(NS.length));
-    }
-    return out;
-  }
-  function importAll(obj){
-    Object.keys(obj || {}).forEach(k => set(k, obj[k]));
-  }
-  function resetAll(){
-    const keys = [];
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(k && k.indexOf(NS) === 0) keys.push(k);
-    }
-    keys.forEach(k => localStorage.removeItem(k));
-  }
-  return { get, set, remove, exportAll, importAll, resetAll };
-})();
+// Preferences are supplied by storage.js.
 
 /* ----------------------------------------------------------------------
    Toast - lightweight notification pills. Real "Notifications" feature
@@ -145,7 +112,8 @@ Aether.Icons = (function(){
   }
 
   function render(){
-    const saved = Aether.Store.get("iconPositions", defaultPositions());
+    const stored = Aether.Store.get("iconPositions", defaultPositions());
+    const saved = stored && typeof stored === "object" ? stored : defaultPositions();
     layer.innerHTML = "";
     apps().forEach(app => {
       const p = saved[app.id] || { col:0, row:0 };
@@ -286,7 +254,8 @@ Aether.ContextMenu = (function(){
     close();
     desktopMenu.innerHTML = "";
     desktopMenu.appendChild(item("New Folder", "folder", () => {
-      Aether.Toast.show("New Folder - available when the file manager is built");
+      const name = prompt("Name for the new folder in Aether Home / Desktop:", "New Folder");
+      if (name !== null) Aether.Storage.fs.create("desktop", name, "folder").then(() => Aether.Apps.launch("files", { folder: "desktop" })).catch(error => Aether.Toast.show(error.message));
     }));
     desktopMenu.appendChild(item("Refresh", "refresh", () => {
       Aether.Icons.render();
@@ -296,7 +265,7 @@ Aether.ContextMenu = (function(){
     desktopMenu.appendChild(sep());
     desktopMenu.appendChild(item("Next Wallpaper", "wallpaper", Aether.Wallpaper.next));
     desktopMenu.appendChild(item("Display Settings", "monitor", () => {
-      Aether.Toast.show("Display Settings - arrives with the Settings app");
+      Aether.Apps.launch("settings");
     }));
     desktopMenu.appendChild(sep());
     desktopMenu.appendChild(item("About Aether OS", "info", Aether.About.open));
@@ -515,7 +484,7 @@ Aether.Tray = (function(){
    Boot
    ---------------------------------------------------------------------- */
 function init(){
-  Aether.Wallpaper.init();
+  Aether.applyAppearance();
   Aether.Icons.render();
   Aether.Clock.init();
   Aether.Tray.init();

@@ -59,7 +59,7 @@
   panel.addEventListener('focusout', () => { setTimeout(() => { if (opened && !panel.contains(document.activeElement) && document.activeElement !== trigger) close(false); }, 0); });
   function endSession(powerOff) {
     close(false);
-    OS.WindowManager.listWindows().forEach(id => OS.WindowManager.closeWindow(id));
+    for (const id of OS.WindowManager.listWindows()) { if (!OS.WindowManager.closeWindow(id)) { OS.Toast.show('System action canceled.'); return; } }
     if (!powerOff) { OS.Icons.render(); OS.Toast.show('Aether restarted'); trigger.focus(); return; }
     const cover = document.createElement('div'); cover.id = 'power-screen';
     cover.innerHTML = '<h1>Aether is powered off</h1><p>This browser desktop is paused.</p><button type="button">Start Aether</button>';

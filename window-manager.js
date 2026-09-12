@@ -68,10 +68,14 @@
     element.classList.remove('interacting');
     if (element.hasPointerCapture(pointerId)) element.releasePointerCapture(pointerId);
   }
+  function savePreference(r) { if (r.preferenceKey && !Aether.Storage?.wasReplaced) Aether.Store.set(r.preferenceKey, { ...r.rect, maximized: r.maximized }); }
+  window.addEventListener('pagehide', () => windows.forEach(savePreference));
   function closeWindow(id) {
     const r = windows.get(id);
     if (!r) return false;
     if (gesture?.id === id) endGesture();
+    if (r.beforeClose && !r.beforeClose()) return false;
+    savePreference(r);
     windows.delete(id);
     order = order.filter(key => key !== id);
     r.task.remove();
@@ -142,7 +146,7 @@
     const task = document.createElement('button');
     task.type = 'button'; task.className = 'window-task'; task.textContent = String(title); task.title = String(title);
     task.setAttribute('aria-controls', id);
-    const r = { id, element, content, task, minWidth: Math.max(240, number(options.minWidth, 320)), minHeight: Math.max(120, number(options.minHeight, 200)), minimized: false, maximized: false, lastFocus: null };
+    const r = { id, element, content, task, minWidth: Math.max(240, number(options.minWidth, 320)), minHeight: Math.max(120, number(options.minHeight, 200)), minimized: false, maximized: !!options.maximized, preferenceKey: options.preferenceKey, beforeClose: options.beforeClose, lastFocus: null };
     r.rect = fit({ x: number(options.x, 140 + (serial - 1) % 8 * 28), y: number(options.y, 48 + (serial - 1) % 8 * 28), width: number(options.width, 640), height: number(options.height, 420) }, r);
     for (const [name, action] of [['minimize', minimizeWindow], ['maximize', toggleMaximize], ['close', closeWindow]]) {
       const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'window-control ' + name;

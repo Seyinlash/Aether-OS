@@ -419,3 +419,55 @@
 #power-screen h1 { font-size:24px; font-weight:500; }
 #power-screen p { color:var(--text-mid); font-size:14px; }
 #power-screen button { flex:none; margin-top:16px; padding:12px 24px; }
+/* Phase 4 workspace surfaces */
+:root[data-theme=blue] { --accent-violet:#4f8dff; }
+.file-manager,.storage-settings { color:var(--text-hi); font-size:13px; }
+.file-manager { height:100%; display:flex; flex-direction:column; gap:8px; min-height:0; }
+.file-manager button,.file-manager input,.file-manager select,.storage-settings button,.storage-settings select,.import-label { font:inherit; color:var(--text-hi); background:#ffffff09; border:1px solid var(--glass-border); border-radius:7px; padding:7px 9px; }
+.file-manager button,.storage-settings button { cursor:pointer; }
+.file-manager button:hover,.storage-settings button:hover { background:#8b6bff25; }
+.file-manager button:disabled { opacity:.35; cursor:default; }
+.file-manager input:focus,.file-manager textarea:focus,.file-manager select:focus { outline:2px solid var(--accent-blue); outline-offset:1px; }
+.file-manager select option,.storage-settings select option { background:#171c30; }
+.fm-navigation,.fm-toolbar,.fm-create,.fm-actions,.fm-editor-heading { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.fm-navigation { flex-wrap:nowrap; }
+.fm-crumbs { display:flex; gap:3px; overflow:auto; min-width:0; }
+.fm-crumbs button { white-space:nowrap; }
+.fm-crumbs button+button::before { content:'› '; color:var(--text-low); }
+.fm-search,.fm-name { min-width:110px; flex:1; }
+.fm-sort { max-width:170px; }
+.fm-destination { max-width:160px; min-width:80px; }
+.fm-actions { gap:4px; }
+.fm-actions button { padding:5px 7px; }
+.fm-message { margin:0; color:#c7b9ff; min-height:16px; font-size:12px; }
+.fm-list { flex:1; min-height:90px; overflow:auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(108px,1fr)); align-content:start; gap:6px; padding:4px; border:1px solid var(--glass-border-soft); border-radius:9px; }
+.fm-item { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:86px; min-width:0; background:transparent!important; border-color:transparent!important; }
+.fm-item.selected { border-color:#8b6bff99!important; background:#8b6bff22!important; }
+.fm-item svg { width:27px; height:27px; flex-shrink:0; color:#bcaaff; }
+.fm-item span { max-width:100%; overflow-wrap:anywhere; }
+.fm-item small { color:var(--text-low); font-size:11px; }
+.fm-list.list-view { display:flex; flex-direction:column; gap:2px; }
+.list-view .fm-item { flex-direction:row; min-height:40px; justify-content:flex-start; text-align:left; }
+.list-view .fm-item span { flex:1; }
+.list-view .fm-item svg { width:20px; height:20px; }
+.fm-empty { grid-column:1/-1; padding:15px; color:var(--text-low); }
+.fm-footer { display:flex; flex-direction:column; gap:5px; font-size:11px; line-height:1.4; color:var(--text-mid); }
+.fm-usage { color:var(--text-low); }
+.fm-editor { flex:1; min-height:180px; display:flex; flex-direction:column; gap:6px; }
+.fm-editor-heading strong { flex:1; overflow:hidden; text-overflow:ellipsis; }
+.fm-editor textarea { flex:1; min-height:100px; width:100%; resize:none; background:#070a1488; border:1px solid var(--glass-border); border-radius:7px; color:var(--text-hi); padding:12px; font:13px/1.6 Consolas,monospace; }
+.fm-draft { color:var(--text-mid); font-size:11px; }
+.os-window:has(.file-manager) .window-content { padding:12px; overflow:auto; }
+.storage-settings { max-width:700px; margin:auto; line-height:1.6; }
+.storage-settings h2 { margin:0 0 8px; font-size:21px; }
+.storage-settings h3 { margin:24px 0 8px; font-size:15px; }
+.storage-settings p { color:var(--text-mid); }
+.storage-summary { padding:12px 16px; border:1px solid var(--glass-border); border-radius:10px; background:#8b6bff0e; }
+.storage-summary p { margin:4px 0; }
+.settings-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.import-label { display:flex; flex-direction:column; gap:6px; }
+.import-data { font-size:12px; max-width:245px; }
+.storage-settings .danger { border-color:#ff6b7a66; color:#ff9ca6; }
+.storage-message { color:#c7b9ff!important; }
+
+.os-window:has(.file-manager),.os-window:has(.storage-settings) { backdrop-filter:blur(18px); }

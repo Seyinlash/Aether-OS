@@ -15,13 +15,13 @@
       !['name', 'icon', 'version', 'description'].every(key => typeof app[key] === 'string' && app[key].trim()) || typeof app.launch !== 'function') throw new TypeError('Invalid or duplicate application');
     registry.set(app.id, Object.freeze({ ...app })); announce();
   }
-  function launch(id) {
+  function launch(id, options = {}) {
     const app = registry.get(id);
     if (!app) { services.notify('Application unavailable'); return null; }
     try {
-      const result = app.launch(Object.freeze({ notify: services.notify, preferences: Object.freeze({ get: (key, fallback) => services.preferences.get(id, key, fallback), set: (key, value) => services.preferences.set(id, key, value) }) }));
+      const result = app.launch(Object.freeze({ initialFolder: options.folder, storage: OS.Storage, notify: services.notify, preferences: Object.freeze({ get: (key, fallback) => services.preferences.get(id, key, fallback), set: (key, value) => services.preferences.set(id, key, value) }) }));
       if (!result || !(result.content instanceof Node)) throw new TypeError('Application must return a content node');
-      const windowId = OS.WindowManager.openWindow(app.name, { content: result.content });
+      const windowId = OS.WindowManager.openWindow(app.name, { ...app.window, ...OS.Store.get('window:' + id, {}), content: result.content, preferenceKey: 'window:' + id, beforeClose: result.beforeClose });
       if (typeof result.dispose === 'function') document.getElementById(windowId).addEventListener('aether:close', result.dispose, { once: true });
       recent = [id, ...recent.filter(key => key !== id)].slice(0, 5);
       OS.Store.set('recentApps', recent); announce();
@@ -46,7 +46,9 @@
     ['photos', 'Photos', 'photo', 'View your image collection.'],
     ['monitor', 'System Monitor', 'gauge', 'Explore system activity.'],
     ['browser', 'Browser', 'compass', 'Browse the web inside Aether.']
-  ]) register({ id, name, icon, version: '0.1.0', description, launch() {
+  ]) register({ id, name, icon, window: id === 'files' ? {width:820,height:560} : id === 'settings' ? {width:760,height:600} : {}, version: ['files','settings'].includes(id) ? '0.4.0' : '0.1.0', description, launch(services) {
+    if (id === 'files') return OS.FileManager.launch(services);
+    if (id === 'settings') return OS.StorageSettings.launch(services);
     const content = document.createElement('div'); content.className = 'app-placeholder';
     const mark = document.createElement('div'); mark.className = 'app-placeholder-icon'; mark.innerHTML = OS.icon(icon);
     const heading = document.createElement('h2'); heading.textContent = name;
