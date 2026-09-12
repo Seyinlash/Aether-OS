@@ -100,7 +100,7 @@ Aether.Icons = (function(){
   const layer = document.getElementById("icons-layer");
   const apps = () => Aether.Apps.list().map(app => ({ ...app, label: app.name, glyph: app.icon }));
 
-  const GRID_X = 96, GRID_Y = 104, PAD = 22;
+  let GRID_X = 96, GRID_Y = 104; const PAD = 22;
   let selected = null;
 
   function defaultPositions(){
@@ -112,6 +112,7 @@ Aether.Icons = (function(){
   }
 
   function render(){
+    const iconSize = Aether.Settings?.get().iconSize || 46; GRID_X = iconSize + 50; GRID_Y = iconSize + 58;
     const stored = Aether.Store.get("iconPositions", defaultPositions());
     const saved = stored && typeof stored === "object" ? stored : defaultPositions();
     layer.innerHTML = "";
@@ -363,7 +364,7 @@ Aether.Clock = (function(){
     let h = d.getHours(); const ampm = h >= 12 ? "PM" : "AM";
     h = h % 12; if(h === 0) h = 12;
     const m = String(d.getMinutes()).padStart(2,"0");
-    timeEl.textContent = h + ":" + m + " " + ampm;
+    timeEl.textContent = Aether.Settings?.get().clock === "24" ? String(d.getHours()).padStart(2,"0") + ":" + m : h + ":" + m + " " + ampm;
     dateEl.textContent = d.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
   }
 
@@ -401,7 +402,7 @@ Aether.Clock = (function(){
   btn.addEventListener("click", toggle);
 
   function init(){ tick(); setInterval(tick, 15000); }
-  return { init };
+  return { init, refresh: tick };
 })();
 
 /* ----------------------------------------------------------------------

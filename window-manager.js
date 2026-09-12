@@ -56,17 +56,22 @@
     else { sync(); document.getElementById('desktop').focus({ preventScroll: true }); }
   }
   function animate(r, frames) {
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (Aether.Settings?.get().animations !== false && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       r.element.getAnimations().forEach(a => a.cancel());
       r.element.animate(frames, { duration: 150, easing: 'ease-out' });
     }
   }
-  function endGesture() {
+  function endGesture(snap = false) {
     if (!gesture) return;
-    const { element, pointerId } = gesture;
+    const g = gesture; const { element, pointerId } = g;
     gesture = null;
     element.classList.remove('interacting');
     if (element.hasPointerCapture(pointerId)) element.releasePointerCapture(pointerId);
+    const r = windows.get(g.id), a = area();
+    if (snap === true && r && !g.edge && g.moved && Aether.Settings?.get().snapping !== false) {
+      if (g.lastY < 12) maximizeWindow(g.id);
+      else if (g.lastX < 12 || g.lastX > a.width - 12) { r.rect = fit({x: g.lastX < 12 ? 0 : a.width/2, y:0, width:a.width/2, height:a.height},r); render(r); }
+    }
   }
   function savePreference(r) { if (r.preferenceKey && !Aether.Storage?.wasReplaced) Aether.Store.set(r.preferenceKey, { ...r.rect, maximized: r.maximized }); }
   window.addEventListener('pagehide', () => windows.forEach(savePreference));
@@ -80,7 +85,7 @@
     order = order.filter(key => key !== id);
     r.task.remove();
     // A noninteractive visual copy lets lifecycle cleanup happen immediately.
-    if (!r.minimized && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!r.minimized && Aether.Settings?.get().animations !== false && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const ghost = r.element.cloneNode(true);
       ghost.removeAttribute('id');
       ghost.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
@@ -101,7 +106,7 @@
     if (gesture?.id === id) endGesture();
     r.minimized = true;
     render(r);
-    r.task.animate([{ opacity: .4, transform: 'translateY(-3px)' }, { opacity: 1, transform: 'none' }], { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 150 });
+    r.task.animate([{ opacity: .4, transform: 'translateY(-3px)' }, { opacity: 1, transform: 'none' }], { duration: Aether.Settings?.get().animations === false || matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 150 });
     if (active === id) focusNext(); else sync();
     return true;
   }
@@ -144,7 +149,7 @@
     if (options.content instanceof Node) content.append(options.content);
     else { const p = document.createElement('p'); p.className = 'window-placeholder'; p.textContent = 'This application is coming in a future phase.'; content.append(p); }
     const task = document.createElement('button');
-    task.type = 'button'; task.className = 'window-task'; task.textContent = String(title); task.title = String(title);
+    task.type = 'button'; task.className = 'window-task'; task.title = String(title); const taskLabel = document.createElement('span'); taskLabel.textContent = String(title); taskLabel.className = 'task-label'; const taskIcon = document.createElement('span'); taskIcon.className = 'task-glyph'; taskIcon.innerHTML = Aether.icon(options.icon || 'monitor'); taskIcon.setAttribute('aria-hidden','true'); task.append(taskIcon,taskLabel); task.setAttribute('aria-label',String(title));
     task.setAttribute('aria-controls', id);
     const r = { id, element, content, task, minWidth: Math.max(240, number(options.minWidth, 320)), minHeight: Math.max(120, number(options.minHeight, 200)), minimized: false, maximized: !!options.maximized, preferenceKey: options.preferenceKey, beforeClose: options.beforeClose, lastFocus: null };
     r.rect = fit({ x: number(options.x, 140 + (serial - 1) % 8 * 28), y: number(options.y, 48 + (serial - 1) % 8 * 28), width: number(options.width, 640), height: number(options.height, 420) }, r);
@@ -182,6 +187,7 @@
     if (!g || e.pointerId !== g.pointerId) return;
     const r = windows.get(g.id), a = area(), b = g.rect;
     const dx = e.clientX - g.x, dy = e.clientY - g.y;
+    g.lastX=e.clientX; g.lastY=e.clientY; if(Math.abs(dx)>3||Math.abs(dy)>3)g.moved=true;
     if (!g.element.hasPointerCapture(e.pointerId)) {
       if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
       g.element.setPointerCapture(e.pointerId);
@@ -198,7 +204,7 @@
     }
     render(r);
   });
-  for (const event of ['pointerup', 'pointercancel']) window.addEventListener(event, e => { if (e.pointerId === gesture?.pointerId) endGesture(); });
+  for (const event of ['pointerup', 'pointercancel']) window.addEventListener(event, e => { if (e.pointerId === gesture?.pointerId) endGesture(e.type === "pointerup"); });
   window.addEventListener('blur', endGesture);
   window.addEventListener('resize', () => { endGesture(); windows.forEach(r => { r.rect = fit(r.rect, r); render(r); }); });
   document.getElementById('desktop').addEventListener('pointerdown', () => { active = null; sync(); });

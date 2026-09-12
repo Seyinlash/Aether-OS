@@ -3,18 +3,14 @@
   'use strict';
   const OS = window.Aether;
   OS.formatBytes = bytes => { if (bytes < 1024) return `${bytes} B`; if (bytes < 1048576) return `${(bytes/1024).toFixed(1)} KB`; return `${(bytes/1048576).toFixed(1)} MB`; };
-  OS.applyAppearance = () => { document.documentElement.dataset.theme = OS.Store.get('theme','violet') === 'blue' ? 'blue' : 'violet'; OS.Wallpaper?.init(); };
   OS.StorageSettings = Object.freeze({ launch(services) {
     const storage=services.storage, content=document.createElement('div');content.className='storage-settings';
     content.innerHTML=`<h2>Aether Volume</h2><p>Your virtual drive is stored in this browser. It does not change files on your computer.</p><div class="storage-summary" role="status">Reading storage…</div>
-      <h3>Appearance</h3><div class="settings-row"><label>Accent <select class="theme-choice"><option value="violet">Violet</option><option value="blue">Blue</option></select></label><label>Wallpaper <select class="wallpaper-choice"><option>nebula</option><option>midnight</option><option>aurora</option><option>eclipse</option></select></label></div>
+
       <h3>Backup and restore</h3><p>Export downloads an Aether backup only when you click. Import reads only the backup you explicitly choose and replaces the Aether data in this browser.</p>
       <div class="settings-row"><button class="export-data">Export Aether data</button><label class="import-label">Import Aether data<input class="import-data" type="file" accept=".json,application/json"></label></div>
       <h3>Reset Aether OS</h3><p>Delete this browser’s Aether files, application data, and preferences. Other websites and your computer’s files are unaffected.</p><button class="reset-data danger">Reset Aether OS…</button><p class="storage-message" role="status"></p>`;
     const $=s=>content.querySelector(s);let disposed=false,busy=false;
-    $('.theme-choice').value=storage.settings.get('theme','violet');$('.wallpaper-choice').value=storage.settings.get('wallpaper','nebula');
-    $('.theme-choice').addEventListener('change',()=>{storage.settings.set('theme',$('.theme-choice').value);OS.applyAppearance();});
-    $('.wallpaper-choice').addEventListener('change',()=>{storage.settings.set('wallpaper',$('.wallpaper-choice').value);OS.applyAppearance();});
     async function refresh(){try{const u=await storage.usage();if(disposed)return;$('.storage-summary').replaceChildren();for(const line of [`${OS.formatBytes(u.volumeBytes+u.contentBytes)} used in Aether Volume`,`${u.files} files · ${u.folders} folders`,`${OS.formatBytes(u.fileBytes)} file contents · ${OS.formatBytes(u.contentBytes)} app data · ${OS.formatBytes(u.settingsBytes)} preferences`,u.browserQuota ? `Browser origin: ${OS.formatBytes(u.browserUsage||0)} used / ${OS.formatBytes(u.browserQuota)} estimated quota (shared with this origin).` : 'Browser quota estimate is unavailable.']){const p=document.createElement('p');p.textContent=line;$('.storage-summary').append(p);}}catch(error){$('.storage-message').textContent=error.message;}}
     async function run(action){if(busy)return;busy=true;content.querySelectorAll('button,input,select').forEach(el=>el.disabled=true);try{await action();}catch(error){$('.storage-message').textContent=error.message;}finally{busy=false;if(!disposed)content.querySelectorAll('button,input,select').forEach(el=>el.disabled=false);}}
     $('.export-data').addEventListener('click',()=>run(async()=>{const backup=await storage.exportData();const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='aether-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);$('.storage-message').textContent='Backup download requested.';}));
