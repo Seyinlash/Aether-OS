@@ -1,4 +1,3 @@
-/* Central persistence boundary. Only this module accesses browser storage. */
 (() => {
   'use strict';
   const OS = window.Aether = window.Aether || {}, NS = 'aether:';
@@ -57,8 +56,14 @@
       if (!['file', 'folder'].includes(type) || typeof content !== 'string') throw new Error('Unsupported file type.');
       const now = Date.now(), item = { id:crypto.randomUUID(), parent, name, type, created:now, modified:now, ...(type === 'file' ? { content, mime:'text/plain' } : {}) }; nodes.push(item); return item;
     }, true),
+    createImage: (parent,name,mime,content) => transact(nodes => {
+      folder(nodes,parent); unique(nodes,parent,name);
+      if(!/^image\/(png|jpeg|webp|gif)$/.test(mime) || typeof content!=='string' || !content.startsWith('data:'+mime+';base64,') || !/^[A-Za-z0-9+/]*={0,2}$/.test(content.split(',')[1]) || content.length>7100000) throw Error('Invalid or oversized image.');
+      const now=Date.now(),item={id:crypto.randomUUID(),parent,name,type:'file',mime,content,created:now,modified:now,imageMeta:{rotation:0,favorite:false,edits:[]}};nodes.push(item);return item;
+    },true),
+    setImageMeta: (id,patch) => transact(nodes => {const item=node(nodes,id);if(!/^image\/(png|jpeg|webp|gif)$/.test(item.mime||''))throw Error('Not an image');const meta=item.imageMeta||{rotation:0,favorite:false,edits:[]};if('rotation' in patch){if(![0,90,180,270].includes(patch.rotation))throw Error('Invalid rotation');meta.rotation=patch.rotation;}if('favorite' in patch)meta.favorite=!!patch.favorite;item.imageMeta=meta;item.modified=Date.now();},true),
     rename: (id, name) => transact(nodes => { protectedNode(id); const item = node(nodes, id); unique(nodes, item.parent, name, id); item.name = name; item.modified = Date.now(); }, true),
-    write: (id, content, expectedModified) => transact(nodes => { const item = node(nodes, id); if (item.type !== 'file' || typeof content !== 'string') throw new Error('Choose a text file.'); if (expectedModified !== undefined && item.modified !== expectedModified) throw new Error('This file changed in another window. Reopen it before saving.'); item.content = content; item.modified = Math.max(Date.now(), item.modified + 1); return item; }, true),
+    write: (id, content, expectedModified) => transact(nodes => { const item = node(nodes, id); if (item.type !== 'file' || (item.mime && item.mime !== 'text/plain') || typeof content !== 'string') throw new Error('Choose a text file.'); if (expectedModified !== undefined && item.modified !== expectedModified) throw new Error('This file changed in another window. Reopen it before saving.'); item.content = content; item.modified = Math.max(Date.now(), item.modified + 1); return item; }, true),
     delete: id => transact(nodes => { protectedNode(id); node(nodes, id); const ids = descendants(nodes, id); for (let i = nodes.length - 1; i >= 0; i--) if (ids.has(nodes[i].id)) nodes.splice(i, 1); }, true),
     transfer: (id, parent, copy = false) => transact(nodes => {
       const source = node(nodes, id); folder(nodes, parent); if (!copy) protectedNode(id);
@@ -88,6 +93,8 @@
     const ids = new Set(), siblings = new Set();
     for (const n of backup.nodes) {
       if (!n || typeof n.id !== 'string' || !n.id || ids.has(n.id) || !['folder','file'].includes(n.type) || !Number.isFinite(n.created) || !Number.isFinite(n.modified) || (n.type === 'file' && typeof n.content !== 'string')) throw new Error('Backup contains invalid file records.');
+      if(n.mime && n.mime !== 'text/plain' && (!/^image\/(png|jpeg|webp|gif)$/.test(n.mime) || !n.content.startsWith('data:'+n.mime+';base64,') || !/^[A-Za-z0-9+/]*={0,2}$/.test(n.content.split(',')[1]))) throw new Error('Invalid image in backup.');
+      if(n.imageMeta && (![0,90,180,270].includes(n.imageMeta.rotation) || typeof n.imageMeta.favorite!=='boolean')) throw new Error('Invalid image metadata.');
       nameOK(n.name); ids.add(n.id); const key = JSON.stringify([n.parent,n.name.toLowerCase()]); if (siblings.has(key)) throw new Error('Backup contains duplicate names.'); siblings.add(key);
     }
     const home = node(backup.nodes, 'home'); if (home.parent !== null || home.name !== 'Home' || home.type !== 'folder') throw new Error('Backup has an invalid Home folder.');

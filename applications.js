@@ -8,7 +8,7 @@
   let recent = [...new Set(stored('recentApps', []))].slice(0, 5);
   const announce = () => events.dispatchEvent(new Event('change'));
   // Apps receive capabilities, not references to other applications or window chrome.
-  const services = Object.freeze({ notify: message => OS.Toast.show(String(message)),
+  const services = Object.freeze({ notify: value => OS.notify(value),
     preferences: Object.freeze({ get: (appId, key, fallback) => OS.Store.get(`app:${appId}:${key}`, fallback), set: (appId, key, value) => OS.Store.set(`app:${appId}:${key}`, value) }) });
   function register(app) {
     if (!app || !/^[a-z][a-z0-9-]*$/.test(app.id) || registry.has(app.id) ||
@@ -19,7 +19,7 @@
     const app = registry.get(id);
     if (!app) { services.notify('Application unavailable'); return null; }
     try {
-      const result = app.launch(Object.freeze({ initialFolder: options.folder, storage: OS.Storage, notify: services.notify, preferences: Object.freeze({ get: (key, fallback) => services.preferences.get(id, key, fallback), set: (key, value) => services.preferences.set(id, key, value) }) }));
+      const result = app.launch(Object.freeze({ initialFolder: options.folder, initialFile: options.fileId, storage: OS.Storage, notify: services.notify, preferences: Object.freeze({ get: (key, fallback) => services.preferences.get(id, key, fallback), set: (key, value) => services.preferences.set(id, key, value) }) }));
       if (!result || !(result.content instanceof Node)) throw new TypeError('Application must return a content node');
       const windowId = OS.WindowManager.openWindow(app.name, { ...app.window, ...OS.Store.get('window:' + id, {}), ...OS.Settings.windowDefaults(), icon: app.icon, content: result.content, preferenceKey: 'window:' + id, beforeClose: result.beforeClose });
       if (typeof result.dispose === 'function') document.getElementById(windowId).addEventListener('aether:close', result.dispose, { once: true });
@@ -33,7 +33,7 @@
     pins = pins.includes(id) ? pins.filter(key => key !== id) : [...pins, id];
     OS.Store.set('pinnedApps', pins); announce();
   }
-  OS.Apps = Object.freeze({ register, launch, get: id => registry.get(id), list: () => [...registry.values()],
+  OS.Apps = Object.freeze({ register, launch, async openFile(id) { const file = await OS.Storage.fs.get(id); return file.mime?.startsWith('image/') ? launch('photos', {fileId:id}) : launch('files', {folder:file.type === 'folder' ? file.id : file.parent}); }, get: id => registry.get(id), list: () => [...registry.values()],
     pinned: () => pins.filter(id => registry.has(id)), recent: () => recent.filter(id => registry.has(id)),
     isPinned: id => pins.includes(id), togglePin,
     subscribe: listener => { events.addEventListener('change', listener); return () => events.removeEventListener('change', listener); }
@@ -46,7 +46,10 @@
     ['photos', 'Photos', 'photo', 'View your image collection.'],
     ['monitor', 'System Monitor', 'gauge', 'Explore system activity.'],
     ['browser', 'Browser', 'compass', 'Browse the web inside Aether.']
-  ]) register({ id, name, icon, window: id === 'files' ? {width:820,height:560} : id === 'settings' ? {width:760,height:640} : id === 'notes' ? {width:860,height:580} : id === 'terminal' ? {width:760,height:480} : {}, version: ['files','settings','terminal','notes'].includes(id) ? '0.5.0' : '0.1.0', description, launch(services) {
+  ]) register({ id, name, icon, window: id === 'files' ? {width:820,height:560} : id === 'settings' ? {width:760,height:640} : id === 'notes' ? {width:860,height:580} : id === 'terminal' ? {width:760,height:480} : {width:840,height:580}, version: '0.6.0', description, launch(services) {
+    if (id === 'photos') return OS.Photos.launch(services);
+    if (id === 'browser') return OS.Browser.launch(services);
+    if (id === 'monitor') return OS.SystemMonitor.launch(services);
     if (id === 'terminal') return OS.Terminal.launch(services);
     if (id === 'notes') return OS.Notes.launch(services);
     if (id === 'files') return OS.FileManager.launch(services);

@@ -1,4 +1,3 @@
-/* Simulated command interpreter: only the injected Aether virtual filesystem is used. */
 (() => {
   'use strict';const OS=window.Aether;
   function tokenize(line){const tokens=[];let value='',quote=null,started=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='\\'&&quote!=="'"){if(i+1===line.length)throw Error('Trailing escape');value+=line[++i];started=true;}else if(quote){if(c===quote)quote=null;else value+=c;}else if(c==='"'||c==="'"){quote=c;started=true;}else if(/\s/.test(c)){if(started){tokens.push(value);value='';started=false;}}else{value+=c;started=true;}}if(quote)throw Error('Unclosed quote');if(started)tokens.push(value);return tokens;}
@@ -15,11 +14,11 @@
       case 'mkdir':{arity(1);const dest=await resolve(args[0],true);await fs.create(dest.parent,dest.name,'folder');break;}
       case 'touch':{arity(1);const dest=await resolve(args[0],true);const found=(await fs.list(dest.parent)).find(n=>n.name===dest.name);if(found){if(found.type!=='file')throw Error('Not a text file');await fs.write(found.id,found.content,found.modified);}else await fs.create(dest.parent,dest.name,'file');break;}
       case 'rm':{arity(1,2);const recursive=args[0]==='-r';if(recursive&&args.length!==2)throw Error('Use rm -r <path>');if(args.length===2&&!recursive)throw Error('Use rm [-r] <path>');const n=await resolve(args[recursive?1:0]);if(n.type==='folder'&&!recursive)throw Error('Use rm -r to delete a folder and its contents');await fs.delete(n.id);break;}
-      case 'cat':{arity(1);const n=await resolve(args[0]);if(n.type!=='file')throw Error('Not a text file');print(n.content);break;}
+      case 'cat':{arity(1);const n=await resolve(args[0]);if(n.type!=='file'||(n.mime&&n.mime!=='text/plain'))throw Error('Not a text file');print(n.content);break;}
       case 'echo':{const index=args.findIndex(a=>a==='>'||a==='>>');if(index<0){print(args.join(' '));break;}if(index!==args.length-2)throw Error('Use echo <text> > <path>');const dest=await resolve(args[index+1],true),text=args.slice(0,index).join(' ')+'\n';const found=(await fs.list(dest.parent)).find(n=>n.name===dest.name);if(found){if(found.type!=='file')throw Error('Not a text file');await fs.write(found.id,(args[index]==='>>'?found.content:'')+text,found.modified);}else await fs.create(dest.parent,dest.name,'file',text);break;}
       case 'date':arity(0);print(new Date().toLocaleString());break;
       case 'whoami':arity(0);print('aether-user');break;
-      case 'neofetch':{arity(0);const u=await services.storage.usage();print(`   /\\    Aether OS\n  /__\\   Browser desktop · Phase 5\n /    \\  User: aether-user\n         Volume: ${OS.formatBytes(u.volumeBytes+u.contentBytes)}\n         Files: ${u.files}\n         Shell: Aether virtual terminal`);break;}
+      case 'neofetch':{arity(0);const u=await services.storage.usage();print(`   /\\    Aether OS\n  /__\\   Browser desktop · Phase 6\n /    \\  User: aether-user\n         Volume: ${OS.formatBytes(u.volumeBytes+u.contentBytes)}\n         Files: ${u.files}\n         Shell: Aether virtual terminal`);break;}
       default:throw Error(`Unknown command: ${command}. Type help.`);
     }}
     async function updatePrompt(){try{prompt.textContent=`${await path(cwd)} $`;}catch{prompt.textContent='[folder removed] $';}}

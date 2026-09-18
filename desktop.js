@@ -41,32 +41,7 @@ Aether.Toast = (function(){
 /* ----------------------------------------------------------------------
    Wallpaper - a few preset gradient scenes, cycled from the context menu.
    ---------------------------------------------------------------------- */
-Aether.Wallpaper = (function(){
-  const presets = [
-    { id:"nebula",  css:"radial-gradient(1200px 700px at 15% 10%, #232c52 0%, transparent 60%), radial-gradient(1000px 800px at 85% 90%, #1c2440 0%, transparent 55%), #06070d" },
-    { id:"midnight",css:"radial-gradient(1100px 700px at 80% 15%, #1a1f38 0%, transparent 55%), radial-gradient(900px 900px at 10% 95%, #141a30 0%, transparent 60%), #05060b" },
-    { id:"aurora",  css:"radial-gradient(1000px 650px at 20% 20%, #26325c 0%, transparent 55%), radial-gradient(1200px 900px at 90% 80%, #24254a 0%, transparent 55%), #07080f" },
-    { id:"eclipse", css:"radial-gradient(900px 900px at 50% 30%, #202444 0%, transparent 60%), #060710" }
-  ];
-  const root = document.getElementById("wallpaper");
-  let idx = 0;
-  function apply(i){
-    idx = ((i % presets.length) + presets.length) % presets.length;
-    root.style.setProperty("--wp-base", presets[idx].css);
-    root.style.background = presets[idx].css;
-    Aether.Store.set("wallpaper", presets[idx].id);
-  }
-  function next(){
-    apply(idx + 1);
-    Aether.Toast.show("Wallpaper changed");
-  }
-  function init(){
-    const saved = Aether.Store.get("wallpaper", presets[0].id);
-    const i = presets.findIndex(p => p.id === saved);
-    apply(i === -1 ? 0 : i);
-  }
-  return { init, next, presets: presets.map(p=>p.id) };
-})();
+// Desktop uses a solid theme surface; wallpapers were retired in Phase 6.
 
 /* ----------------------------------------------------------------------
    Icon glyphs - small inline line-icon set (no external deps).
@@ -264,7 +239,7 @@ Aether.ContextMenu = (function(){
     }));
     desktopMenu.appendChild(item("Auto-arrange Icons", "arrange", Aether.Icons.autoArrange));
     desktopMenu.appendChild(sep());
-    desktopMenu.appendChild(item("Next Wallpaper", "wallpaper", Aether.Wallpaper.next));
+    
     desktopMenu.appendChild(item("Display Settings", "monitor", () => {
       Aether.Apps.launch("settings");
     }));

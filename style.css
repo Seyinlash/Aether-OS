@@ -1,9 +1,3 @@
-/* ==========================================================================
-     AETHER OS - DESIGN TOKENS
-     Palette: deep space-blue base, violet/blue glass accents.
-     Type:    "Space Grotesk"   system chrome (taskbar, clock, headings)
-               "Inter"           labels, body, menu text
-     ========================================================================== */
   :root{
     --void-950: #06070d;
     --void-900: #0b0e18;
@@ -538,3 +532,77 @@
 .start-app svg,.fm-item svg { color:var(--accent-violet); }
 .start-pin[aria-pressed=true] { color:var(--accent-violet); }
 @container (max-width:480px) { .notes-sidebar { max-height:none; }.notes-list { max-height:130px; min-height:50px; flex:none; }.notes-editor { flex:none; min-height:300px; } }
+/* Phase 6 — practical desktop surfaces, inspired by restrained developer tools. */
+:root { --desktop-bg:#191c1f; --surface-rgb:35,38,42; --text-hi:#e4e7eb; --text-mid:#b9bfc8; --text-low:#939ba6; --glass-border:#393f46; --glass-border-soft:#30363d; --radius-sm:4px; --radius-md:6px; --radius-lg:8px; --shadow-window:0 5px 18px #0003; --shadow-soft:0 3px 10px #0002; }
+[data-mode=light] { --desktop-bg:#eef0f2; --surface-rgb:250,251,252; --text-hi:#24292f; --text-mid:#46515d; --text-low:#66717c; --glass-border:#ccd1d6; --glass-border-soft:#dce0e4; }
+html,body { font-family:Segoe UI,Arial,sans-serif; }
+h1,h2,h3,.font-display { font-family:inherit; letter-spacing:0; }
+#wallpaper { background:var(--desktop-bg)!important; transition:none; }
+#wallpaper::after,#wallpaper>* { display:none!important; }
+#boot-screen { display:none!important; }
+.os-window,.glass-panel,#start-menu,#taskbar,.popover,.context-menu { background:rgba(var(--surface-rgb),var(--surface-alpha)); border-color:var(--glass-border); backdrop-filter:blur(var(--surface-blur)); -webkit-backdrop-filter:blur(var(--surface-blur)); border-radius:5px; }
+.os-window { box-shadow:var(--shadow-window); }
+.os-window.focused { border-color:var(--accent-violet); box-shadow:var(--shadow-window); }
+.os-window.maximized,#taskbar { border-radius:0; }
+.window-titlebar { background:var(--glass-fill); }
+.window-control,.window-task,.tray-btn,#clock-btn,#start-btn,.menu-item,.icon,.icon-glyph { border-radius:4px; }
+.icon-glyph { background:transparent; box-shadow:none; backdrop-filter:none; border:0; }
+.icon-glyph svg { stroke:var(--text-mid); }
+.icon-label { text-shadow:none; }
+.window-task { background:transparent; }
+.start-profile .profile-mark { background:var(--glass-fill); border:1px solid var(--glass-border); border-radius:4px; }
+#start-menu { width:min(410px,calc(100vw - 20px)); padding:14px; }
+.start-app,.start-app-row,.start-pin,.start-search input { border-radius:4px; }
+.pinned-grid .start-app { min-height:60px; }
+.app-placeholder-icon svg { color:var(--accent-violet); }
+.toast { background:rgb(var(--surface-rgb)); border-radius:5px; backdrop-filter:none; box-shadow:var(--shadow-soft); }
+.storage-summary { background:var(--glass-fill); border-radius:4px; }
+button,input,select,textarea { accent-color:var(--accent-violet); }
+.app-toolbar { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.photos-app button,.browser-app button,.notification-list button,#notification-center header button,.photos-app input,.photos-app select,.browser-app input { font:inherit; font-size:13px; color:var(--text-hi); background:var(--glass-fill); border:1px solid var(--glass-border); border-radius:4px; padding:6px 9px; }
+.photos-app button:hover,.browser-app button:hover,#notification-center button:hover { background:var(--glass-fill-strong); }
+.photos-app select option { background:rgb(var(--surface-rgb)); }
+button:disabled { opacity:.45; }
+.photos-app,.browser-app { display:flex; flex-direction:column; height:100%; min-height:260px; gap:10px; font-size:13px; }
+.import-photos { display:flex; gap:7px; align-items:center; }
+.import-photos input { width:190px; }
+.album-name { width:110px; }
+.photo-status { margin:0; font-size:12px; color:var(--text-mid); }
+.photo-gallery { flex:1; overflow:auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); align-content:start; gap:12px; }
+.photo-tile { display:flex; flex-direction:column; gap:7px; overflow:hidden; text-align:left; }
+.photo-tile img { width:100%; height:110px; object-fit:cover; background:var(--desktop-bg); }
+.photo-tile span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%; }
+.photo-viewer { flex:1; min-height:0; display:flex; flex-direction:column; gap:8px; }
+.photo-stage { flex:1; min-height:120px; overflow:auto; display:grid; place-items:center; background:var(--desktop-bg); border:1px solid var(--glass-border-soft); }
+.photo-stage img { max-width:90%; max-height:330px; object-fit:contain; transform-origin:center; }
+.photo-caption { margin:0; color:var(--text-mid); }
+.photos-app:fullscreen { padding:20px; background:rgb(var(--surface-rgb)); }
+.photos-app:fullscreen .photo-stage img { max-height:65vh; }
+.browser-tabs { display:flex; align-items:center; gap:5px; overflow:auto; flex-shrink:0; }
+.browser-tab { display:flex; }
+.browser-tab button:first-child { max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.browser-tab [aria-pressed=true] { border-bottom:2px solid var(--accent-violet); }
+.browser-bar input { flex:1; min-width:150px; }
+.browser-page { flex:1; overflow:auto; border-top:1px solid var(--glass-border); padding:20px 8px; line-height:1.6; overflow-wrap:anywhere; }
+.browser-page h2 { font-size:21px; font-weight:600; }
+.browser-page a { color:var(--accent-violet); }
+.browser-page button { margin-right:8px; }
+.browser-saved { display:flex; margin:6px 0; }
+.browser-saved button:first-child { flex:1; text-align:left; overflow-wrap:anywhere; }
+.system-monitor { font-size:13px; line-height:1.5; }
+.system-monitor h2 { font-size:21px; }
+.monitor-metrics { display:grid; grid-template-columns:minmax(130px,1fr) 2fr; margin:20px 0; }
+.monitor-metrics dt,.monitor-metrics dd { margin:0; padding:10px 8px; border-bottom:1px solid var(--glass-border-soft); }
+.monitor-metrics dd { color:var(--text-mid); }
+.monitor-windows>div { padding:7px; border-bottom:1px solid var(--glass-border-soft); }
+.monitor-status { color:var(--text-low); }
+#notification-toggle { width:auto; min-width:34px; padding:0 7px; white-space:nowrap; }
+#notification-center { position:fixed; bottom:calc(var(--taskbar-h) + 8px); right:8px; z-index:70; width:min(410px,calc(100vw - 16px)); max-height:calc(100dvh - var(--taskbar-h) - 30px); display:flex; flex-direction:column; background:rgb(var(--surface-rgb)); color:var(--text-hi); border:1px solid var(--glass-border); border-radius:5px; box-shadow:var(--shadow-soft); }
+#notification-center header { display:flex; align-items:center; gap:5px; padding:12px; border-bottom:1px solid var(--glass-border); }
+#notification-center h2 { flex:1; font-size:15px; margin:0; }
+.notification-list { padding:12px; overflow:auto; font-size:13px; }
+.notification-list article { border-bottom:1px solid var(--glass-border); padding:12px 0; }
+.notification-list article.unread { border-left:2px solid var(--accent-violet); padding-left:10px; }
+.notification-list p { margin:7px 0; overflow-wrap:anywhere; }
+.notification-list small { color:var(--text-low); }
+.notification-list button { float:right; }

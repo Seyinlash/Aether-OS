@@ -30,7 +30,7 @@
     function select(id) {
       selected = id; const item = all.find(n => n.id === id);
       $('.fm-list').querySelectorAll('.fm-item').forEach(el => { el.classList.toggle('selected',el.dataset.id === id); el.setAttribute('aria-pressed',String(el.dataset.id === id)); });
-      $('.fm-details').textContent = item ? `${item.name} · ${item.type === 'folder' ? 'Folder' : 'Text file · ' + format(size(item))} · Modified ${new Date(item.modified).toLocaleString()} · ${path(item.parent).map(n=>n.name).join(' / ')}` : 'Select an item for details.';
+      $('.fm-details').textContent = item ? `${item.name} · ${item.type === 'folder' ? 'Folder' : (item.mime?.startsWith('image/') ? 'Image · ' : 'Text file · ') + format(size(item))} · Modified ${new Date(item.modified).toLocaleString()} · ${path(item.parent).map(n=>n.name).join(' / ')}` : 'Select an item for details.';
       controls();
     }
     async function render() {
@@ -61,7 +61,7 @@
     }
     function closeEditor() { if (dirty && !confirm('Discard unsaved changes to this text file?')) return false; editor=null; dirty=false; $('.fm-editor').hidden=true; return true; }
     async function navigate(id, remember = true) { if (!closeEditor()) return; try { const folder = await fs.get(id); if (folder.type !== 'folder') throw new Error('Folder no longer exists.'); } catch (error) { tell(error.message); return; } current=id; selected=null; $('.fm-search').value=''; if (remember) { history=history.slice(0,position+1); history.push(id); position=history.length-1; } await render(); }
-    async function open(id) { try { const item = await fs.get(id); if (item.type==='folder') return navigate(id); if (!closeEditor()) return; editor=item; $('.fm-editor').hidden=false; $('.fm-editor strong').textContent=item.name; $('.fm-editor textarea').value=item.content; $('.fm-draft').textContent='Saved'; $('.fm-editor textarea').focus(); } catch(error) { tell(error.message); } }
+    async function open(id) { try { const item = await fs.get(id); if (item.type==='folder') return navigate(id); if (item.mime?.startsWith('image/')) return await OS.Apps.openFile(id); if (!closeEditor()) return; editor=item; $('.fm-editor').hidden=false; $('.fm-editor strong').textContent=item.name; $('.fm-editor textarea').value=item.content; $('.fm-draft').textContent='Saved'; $('.fm-editor textarea').focus(); } catch(error) { tell(error.message); } }
     $('.fm-editor textarea').addEventListener('input',()=>{ dirty=true; $('.fm-draft').textContent='Unsaved changes'; });
     const actions = {
       folder:()=>run(async()=>{ await fs.create(current,$('.fm-name').value,'folder'); $('.fm-name').value=''; await render(); }),
